@@ -1,0 +1,677 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Georgie's Workouts">
+<meta name="theme-color" content="#FBF6F8" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#16101A" media="(prefers-color-scheme: dark)">
+<title>Georgie's Workouts</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&display=swap">
+<style>
+/* Layout: phone-first single column; sticky day tabs; one card per exercise with video on top, "How to do it" below. */
+:root{
+  --bg:#FBF6F8; --surface:#FFFFFF; --ink:#2A1A27; --muted:#7B6774; --line:#ECDFE5;
+  --accent:#B8325F; --accent-soft:#F8E3EA; --accent-ink:#FFFFFF;
+  --sage:#4E7A64; --sage-soft:#E3EFE8;
+  --display:"Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
+  --body:"DM Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --r:14px;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#16101A; --surface:#211826; --ink:#F5EAF0; --muted:#B39FAC; --line:#352939;
+    --accent:#F0779F; --accent-soft:#3A2030; --accent-ink:#1E0E17;
+    --sage:#8FC4A7; --sage-soft:#1E2E26;
+    color-scheme:dark;
+  }
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; background:var(--bg); color:var(--ink); font:16px/1.55 var(--body);
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:calc(env(safe-area-inset-bottom,0px) + 90px);
+}
+.wrap{max-width:760px; margin:0 auto; padding-left:max(16px, env(safe-area-inset-left,0px)); padding-right:max(16px, env(safe-area-inset-right,0px))}
+h1,h2,h3{font-family:var(--display); text-wrap:balance; margin:0; line-height:1.1}
+button{font:inherit; color:inherit; cursor:pointer}
+:focus-visible{outline:3px solid var(--accent); outline-offset:2px; border-radius:6px}
+.num{font-variant-numeric:tabular-nums}
+
+/* Hero */
+header.hero{padding-block:28px 18px}
+.eyebrow{font-size:12px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--accent)}
+.hero h1{font-size:clamp(40px, 11vw, 64px); font-weight:800; letter-spacing:-.02em; margin-top:6px}
+.hero p{color:var(--muted); margin:10px 0 0; max-width:56ch}
+.facts{display:flex; flex-wrap:wrap; gap:8px; margin-top:16px; padding:0; list-style:none}
+.facts li{font-size:13px; font-weight:500; padding:6px 12px; border-radius:999px; background:var(--surface); border:1px solid var(--line)}
+
+/* Info drawers */
+.drawers{display:grid; gap:10px; margin-bottom:18px}
+details.drawer{background:var(--surface); border:1px solid var(--line); border-radius:var(--r)}
+details.drawer > summary{list-style:none; padding:14px 16px; font-weight:700; display:flex; justify-content:space-between; align-items:center; gap:12px}
+details.drawer > summary::-webkit-details-marker{display:none}
+details.drawer > summary::after{content:"+"; font-family:var(--display); font-size:22px; color:var(--accent); line-height:1}
+details.drawer[open] > summary::after{content:"–"}
+.drawer-body{padding:0 16px 16px; color:var(--ink)}
+.drawer-body p{margin:0 0 10px}
+.drawer-body ul{margin:0 0 10px; padding-left:20px}
+.drawer-body li{margin-bottom:6px}
+.week{display:grid; grid-template-columns:repeat(7,1fr); gap:6px; margin:4px 0 12px}
+.week div{text-align:center; padding:8px 2px; border-radius:10px; background:var(--bg); border:1px solid var(--line); font-size:12px}
+.week div b{display:block; font-size:13px}
+.week div.on{background:var(--accent-soft); border-color:transparent; color:var(--ink)}
+.week div.on b{color:var(--accent)}
+
+/* Tabs */
+nav.tabs{position:sticky; top:env(safe-area-inset-top,0px); z-index:20; background:var(--bg); padding-block:10px; border-bottom:1px solid var(--line)}
+body::before{content:""; position:fixed; inset:0 0 auto; height:env(safe-area-inset-top,0px); z-index:21; background:var(--bg)}
+.tablist{display:grid; grid-template-columns:repeat(4,1fr); gap:6px}
+.tab{border:1px solid var(--line); background:var(--surface); border-radius:12px; padding:8px 6px; text-align:left; min-width:0}
+.tab small{display:block; font-size:11px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--muted)}
+.tab span{display:block; font-family:var(--display); font-weight:700; font-size:14px; line-height:1.15; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.tab[aria-selected="true"]{background:var(--accent); border-color:var(--accent); color:var(--accent-ink)}
+.tab[aria-selected="true"] small{color:var(--accent-ink); opacity:.8}
+
+/* Day header + time bar */
+.dayhead{padding-block:22px 6px}
+.dayhead h2{font-size:clamp(28px, 7.5vw, 40px); font-weight:800; letter-spacing:-.01em}
+.dayhead p{margin:6px 0 0; color:var(--muted)}
+.timebar{display:flex; height:12px; border-radius:999px; overflow:hidden; margin-top:16px; gap:2px}
+.timebar span{display:block; height:100%}
+.legend{display:flex; flex-wrap:wrap; gap:6px 14px; margin-top:8px; font-size:13px; color:var(--muted)}
+.legend i{display:inline-block; width:10px; height:10px; border-radius:3px; margin-right:6px; vertical-align:-1px}
+.c-warm{background:#E7A9BD} .c-main{background:var(--accent)} .c-fin{background:#7C4A9E} .c-cool{background:var(--sage)}
+@media (prefers-color-scheme: dark){ .c-warm{background:#8E4E66} .c-fin{background:#B587D6} }
+
+/* Sections */
+.section{margin-top:26px}
+.sechead{display:flex; align-items:baseline; justify-content:space-between; gap:12px; border-bottom:2px solid var(--ink); padding-bottom:6px; margin-bottom:12px}
+.sechead h3{font-size:20px; font-weight:800}
+.sechead .mins{font-size:13px; font-weight:700; color:var(--muted)}
+.cards{display:grid; gap:14px}
+
+/* Exercise card */
+.card{background:var(--surface); border:1px solid var(--line); border-radius:18px; overflow:hidden}
+.card.done{border-color:var(--sage)}
+.video{position:relative; aspect-ratio:16/9; max-width:100%; background:#000; display:block; width:100%; border:0; padding:0}
+.video img{width:100%; height:100%; object-fit:cover; display:block; opacity:.92}
+.video .play{position:absolute; inset:0; display:grid; place-items:center}
+.video .play b{width:64px; height:64px; border-radius:50%; background:var(--accent); display:grid; place-items:center; box-shadow:0 6px 24px rgba(0,0,0,.35)}
+.video .play b::before{content:""; border-left:20px solid #fff; border-top:12px solid transparent; border-bottom:12px solid transparent; margin-left:5px}
+.video .tag{position:absolute; left:10px; bottom:10px; font-size:12px; font-weight:700; background:rgba(0,0,0,.65); color:#fff; padding:4px 9px; border-radius:999px}
+.video iframe{position:absolute; inset:0; width:100%; height:100%; border:0}
+.cbody{padding:14px 16px 16px}
+.ctop{display:flex; justify-content:space-between; align-items:flex-start; gap:10px}
+.ctop h4{font-family:var(--display); font-size:21px; font-weight:700; margin:0; line-height:1.15}
+.muscles{font-size:13px; color:var(--muted); margin-top:3px}
+.minpill{flex:none; font-size:12px; font-weight:700; padding:4px 9px; border-radius:999px; background:var(--accent-soft); color:var(--accent)}
+.rx{display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:8px; margin-top:12px}
+.rx div{background:var(--bg); border-radius:10px; padding:8px 10px; min-width:0}
+.rx small{display:block; font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); font-weight:700}
+.rx b{font-family:var(--display); font-size:17px}
+.note{margin:10px 0 0; font-size:14px; padding:8px 12px; border-left:3px solid var(--accent); background:var(--accent-soft); border-radius:0 8px 8px 0}
+.tracker{display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-top:12px}
+.setbtn{width:42px; height:42px; border-radius:12px; border:1.5px solid var(--line); background:var(--surface); font-weight:700}
+.setbtn[aria-pressed="true"]{background:var(--sage); border-color:var(--sage); color:#fff}
+.restbtn{margin-left:auto; border:0; background:var(--ink); color:var(--bg); padding:10px 14px; border-radius:12px; font-weight:700; font-size:14px}
+.weight{display:flex; align-items:center; gap:8px; margin-top:10px; font-size:14px; color:var(--muted)}
+.weight input{width:110px; padding:8px 10px; border:1.5px solid var(--line); border-radius:10px; background:var(--bg); color:var(--ink); font:inherit; font-size:16px}
+.ytlink{font-size:13px; color:var(--muted)}
+.ytlink a{color:var(--accent)}
+
+details.how{margin-top:14px; border-top:1px solid var(--line)}
+details.how > summary{list-style:none; padding:12px 0 2px; font-weight:700; color:var(--accent); display:flex; align-items:center; gap:8px}
+details.how > summary::-webkit-details-marker{display:none}
+details.how > summary::before{content:"▸"; transition:transform .15s}
+details.how[open] > summary::before{transform:rotate(90deg)}
+.howbody h5{font-size:12px; letter-spacing:.1em; text-transform:uppercase; margin:14px 0 6px; color:var(--muted)}
+.howbody ol, .howbody ul{margin:0; padding-left:20px}
+.howbody li{margin-bottom:6px}
+.howbody .swap{margin-top:12px; font-size:14px; padding:10px 12px; background:var(--sage-soft); border-radius:10px}
+.howbody .swap b{color:var(--sage)}
+
+.dayfoot{display:flex; gap:10px; flex-wrap:wrap; margin-top:24px}
+.ghost{border:1.5px solid var(--line); background:transparent; padding:10px 14px; border-radius:12px; font-weight:600; font-size:14px}
+.progress{font-size:14px; color:var(--muted); align-self:center}
+
+footer{margin-top:36px; font-size:13px; color:var(--muted); border-top:1px solid var(--line); padding-block:18px}
+
+/* Rest timer */
+.timer{position:fixed; left:0; right:0; bottom:0; z-index:30; background:var(--ink); color:var(--bg);
+  padding:12px max(16px, env(safe-area-inset-right,0px)) calc(12px + env(safe-area-inset-bottom,0px)) max(16px, env(safe-area-inset-left,0px));
+  display:flex; align-items:center; gap:12px; box-shadow:0 -8px 30px rgba(0,0,0,.2)}
+.timer .t{font-family:var(--display); font-size:34px; font-weight:800; min-width:96px}
+.timer .lbl{font-size:13px; opacity:.75; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.timer button{border:0; border-radius:10px; padding:10px 12px; font-weight:700; background:rgba(255,255,255,.14); color:inherit}
+@media (prefers-color-scheme: dark){ .timer button{background:rgba(0,0,0,.12)} }
+.timer.ding{animation:ding .5s ease 3}
+@keyframes ding{50%{background:var(--accent)}}
+@media (prefers-reduced-motion: reduce){ .timer.ding{animation:none; background:var(--accent)} details.how > summary::before{transition:none} }
+@media (max-width:420px){ .tab span{font-size:13px} .ctop h4{font-size:19px} }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="hero">
+    <div class="eyebrow">Your 4-day gym plan, Georgie</div>
+    <h1>Georgie's Workouts</h1>
+    <p>A beginner glute-focused program for a full gym. Four 60-minute sessions a week: two lower-body days, one upper-body day, one full-body day. Every move has a demo video and a "How to do it" section under it.</p>
+    <ul class="facts">
+      <li>4 days / week</li><li>60 min each</li><li>Beginner</li><li>Full gym</li><li>Glutes + toned</li>
+    </ul>
+  </header>
+
+  <div class="drawers">
+    <details class="drawer">
+      <summary>Weekly schedule</summary>
+      <div class="drawer-body">
+        <div class="week">
+          <div class="on"><b>Mon</b>Day 1</div><div class="on"><b>Tue</b>Day 2</div><div><b>Wed</b>Rest</div>
+          <div class="on"><b>Thu</b>Day 3</div><div><b>Fri</b>Rest</div><div class="on"><b>Sat</b>Day 4</div><div><b>Sun</b>Rest</div>
+        </div>
+        <p>Any days work. Just try not to put the two lower-body days (Day 1 and Day 3) back to back. On rest days, an easy 30–45 minute walk is great for recovery.</p>
+      </div>
+    </details>
+    <details class="drawer">
+      <summary>How to get stronger each week</summary>
+      <div class="drawer-body">
+        <p>This plan uses <b>double progression</b>, the same method behind most popular glute programs.</p>
+        <ul>
+          <li><b>Pick a weight</b> you could lift for 2–3 more reps at the end of each set. The last reps should feel hard but your form should stay clean.</li>
+          <li><b>Each session,</b> try to add a rep or two.</li>
+          <li><b>Once you hit the top rep number on every set</b> (for example 3×12), add weight next time: about 5–10 lb for hip thrusts, leg press and deadlifts, or 2.5–5 lb for arms and shoulders. Then build the reps back up.</li>
+          <li><b>Weeks 1–2:</b> keep it light and focus on learning the moves. Watch each video before your first set.</li>
+          <li><b>Every 8 weeks:</b> take an easy week at about half the sets, then keep going.</li>
+        </ul>
+        <p>Write your weights in the box on each exercise. It saves on this phone so you can beat it next time.</p>
+      </div>
+    </details>
+    <details class="drawer">
+      <summary>Why it's built this way</summary>
+      <div class="drawer-body">
+        <ul>
+          <li><b>Glutes twice a week.</b> Hitting a muscle about twice a week with enough hard sets tends to build it better than one big day.</li>
+          <li><b>Hip thrusts, hinges and lunges.</b> These three movement types work the glutes from different angles, which is why they show up in nearly every well-known women's glute plan.</li>
+          <li><b>Upper body too.</b> Back and shoulder work gives a toned, balanced shape and better posture.</li>
+          <li><b>Machines and dumbbells first.</b> They're easier to learn than barbell lifts and let beginners train hard safely.</li>
+          <li><b>Short cardio finishers.</b> Stairmaster and incline walking burn extra calories without cutting into recovery.</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+</div>
+
+<nav class="tabs" aria-label="Workout days">
+  <div class="wrap"><div class="tablist" role="tablist" id="tablist"></div></div>
+</nav>
+
+<main class="wrap" id="day"></main>
+
+<div class="wrap">
+  <footer>
+    <p><b>Use it like an app:</b> on iPhone, open this page in Safari, tap Share, then "Add to Home Screen." On Android, open it in Chrome, tap ⋮, then "Add to Home screen."</p>
+    <p>This is a general fitness plan, not medical advice. If something hurts (sharp pain, not normal muscle burn), stop and swap the exercise. Videos are from independent coaches on YouTube.</p>
+  </footer>
+</div>
+
+<div class="timer" id="timer" hidden role="status" aria-live="polite">
+  <div class="t num" id="tval">1:30</div>
+  <div class="lbl" id="tlbl">Rest</div>
+  <button type="button" id="tplus">+15s</button>
+  <button type="button" id="tstop">Done</button>
+</div>
+
+<script>
+/* ---------- Exercise library ---------- */
+const EX = {
+  incline_walk:{name:"Incline Treadmill Walk", muscles:"Glutes, calves, cardio", yt:"9ccVxEvWtpA",
+    steps:["Set the speed to 2.5–3.2 mph and the incline to 8–12%.","Stand tall with your chest up and take normal-length steps.","Push through your whole foot and feel your glutes drive you up the hill.","Breathe steadily. You should be able to talk, but not sing."],
+    tips:["Let go of the rails. Swing your arms naturally.","Lean very slightly forward from the ankles, not the waist."],
+    mistakes:["Holding the handrails and leaning back. It cancels out most of the work.","Going so fast you have to jog."]},
+  glute_bridge:{name:"Glute Bridge", muscles:"Glutes, hamstrings", yt:"wQQ6N5piDG0",
+    steps:["Lie on your back, knees bent, feet flat and hip-width apart, heels about a hand's length from your butt.","Tuck your ribs down and press your lower back gently into the floor.","Push through your heels and squeeze your glutes to lift your hips until knees, hips and shoulders form a straight line.","Hold the top for 2 seconds with a hard squeeze, then lower slowly."],
+    tips:["Think of tucking your tailbone up at the top.","Feeling it in your hamstrings? Move your feet a little closer."],
+    mistakes:["Arching your lower back to get higher.","Pushing through your toes."]},
+  lateral_walk:{name:"Banded Lateral Walk", muscles:"Side glutes (glute medius)", yt:"A12uKYg-Kuo",
+    steps:["Put a mini band just above your knees or around your ankles.","Stand with feet hip-width apart and sit back into a quarter squat.","Step sideways with one foot, then follow with the other. Keep tension on the band the whole time.","Take 10 steps one way, then 10 back."],
+    tips:["Keep your toes pointing forward.","Stay low. Don't bob up and down."],
+    mistakes:["Letting your knees cave in.","Standing up straight, which takes the glutes out of it."]},
+  clamshell:{name:"Banded Clamshell", muscles:"Side glutes (glute medius)", yt:"wXbXHy8tjpw",
+    steps:["Lie on your side with a band above your knees, knees bent about 45° and stacked.","Rest your head on your arm and keep your feet together.","Without rolling your hips back, open your top knee as far as you can.","Pause, then close slowly. Do all reps, then switch sides."],
+    tips:["Put your top hand on your hip to make sure it isn't rolling backward."],
+    mistakes:["Rolling your hips back to get more range.","Rushing the reps."]},
+  bw_squat:{name:"Bodyweight Squat", muscles:"Quads, glutes", yt:"ax3eO8xBZVU",
+    steps:["Stand with feet shoulder-width apart, toes turned out slightly.","Brace your core and sit your hips back and down like you're sitting in a chair.","Go as low as you can with a flat back and heels down.","Push the floor away to stand up tall."],
+    tips:["Reach your arms forward for balance.","Knees should track over your toes."],
+    mistakes:["Heels lifting off the floor.","Knees caving inward."]},
+  cat_cow:{name:"Cat-Cow", muscles:"Spine mobility", yt:"xKN35sXbwpQ",
+    steps:["Start on hands and knees, hands under shoulders, knees under hips.","Inhale: drop your belly, lift your chest and tailbone (cow).","Exhale: round your back up toward the ceiling and tuck your chin (cat).","Move slowly with your breath."],
+    tips:["Move one vertebra at a time. Think slow and smooth."],
+    mistakes:["Rushing. This is a mobility drill, not a rep race."]},
+  pull_apart:{name:"Band Pull-Apart", muscles:"Upper back, rear shoulders", yt:"lmvedD1PFD8",
+    steps:["Hold a light band at shoulder height, arms straight, hands shoulder-width apart.","Pull the band apart by squeezing your shoulder blades together until it touches your chest.","Control it back to the start."],
+    tips:["Keep your shoulders down away from your ears.","Palms down, arms straight."],
+    mistakes:["Arching your back to finish the rep.","Using a band that's too heavy."]},
+
+  hip_thrust:{name:"Barbell Hip Thrust", muscles:"Glutes (main builder)", yt:"S_uZP4UH6J0",
+    steps:["Sit on the floor with the bottom of your shoulder blades against a bench. Roll a padded bar over your hips.","Plant your feet flat, about shoulder-width apart, so your shins are vertical at the top.","Tuck your chin and ribs down, then drive through your heels to lift your hips until your body is flat from shoulders to knees.","Squeeze your glutes hard for 1 second at the top, then lower under control."],
+    tips:["Look forward, not at the ceiling. Your head moves with your torso.","Use a bar pad or a folded mat. Bruised hip bones are no fun.","Most gyms also have a hip thrust machine. It's a great option and much easier to set up."],
+    mistakes:["Arching your lower back at the top instead of finishing with your glutes.","Feet too far out (you'll feel it in your hamstrings) or too close (you'll feel it in your quads)."],
+    swap:"Hip thrust machine, or a Smith machine hip thrust."},
+  rdl:{name:"Dumbbell Romanian Deadlift", muscles:"Hamstrings, glutes", yt:"hQgFixeXdZo",
+    steps:["Stand tall holding dumbbells in front of your thighs, feet hip-width apart, knees softly bent.","Push your hips straight back like you're closing a car door with your butt. Let the weights slide down your legs.","Keep your back flat and go until you feel a strong stretch in your hamstrings (usually mid-shin).","Drive your hips forward and squeeze your glutes to stand up."],
+    tips:["Keep the dumbbells close to your legs the whole time.","Your knee bend stays the same from start to finish. This is a hinge, not a squat."],
+    mistakes:["Rounding your back to reach lower.","Squatting down instead of pushing your hips back."]},
+  kickback:{name:"Cable Glute Kickback", muscles:"Glutes", yt:"S6r4GTYK8lI",
+    steps:["Attach an ankle strap to a low cable and put it on one ankle.","Face the machine, hold on, and hinge forward slightly with a soft bend in the standing knee.","Kick your working leg back and slightly out, squeezing your glute at the top.","Return slowly without letting the weight stack touch. Do all reps, then switch legs."],
+    tips:["Think of pushing your heel back toward the wall behind you.","Light weight with a hard squeeze beats heavy and swingy."],
+    mistakes:["Arching your lower back to kick higher.","Swinging the leg with momentum."],
+    swap:"Glute kickback machine, or a banded kickback on all fours."},
+  leg_curl:{name:"Seated Leg Curl", muscles:"Hamstrings", yt:"G5iP_YcDQdE",
+    steps:["Adjust the machine so your knees line up with the pivot point and the pad sits just above your heels.","Lower the thigh pad so it holds your legs snug.","Curl your heels down and back as far as you can.","Pause, then let it up slowly (about 3 seconds)."],
+    tips:["Lean your chest forward slightly for a stronger hamstring stretch.","Point your toes up toward your shins."],
+    mistakes:["Letting the weight slam back up.","Lifting your hips off the seat."],
+    swap:"Lying leg curl machine."},
+  abduction:{name:"Hip Abduction Machine", muscles:"Side and upper glutes", yt:"afpCTlFdyl8",
+    steps:["Sit with the pads on the outside of your knees.","Lean your torso forward slightly and hold the handles or the seat.","Push your knees out as wide as you can and pause for a second.","Return slowly without letting the weights touch."],
+    tips:["Leaning forward hits the glutes more than sitting upright.","For finishers, chase the burn. The last reps should be tough."],
+    mistakes:["Letting the weight snap your legs back together.","Bouncing through short reps."]},
+  back_ext:{name:"45° Back Extension (Glute Focus)", muscles:"Glutes, hamstrings", yt:"yj1y02fSkNQ",
+    steps:["Set the pad just below your hip bones so you can bend freely at the hips.","Turn your feet out slightly and cross your arms over your chest.","Lower your torso by bending at the hips, keeping a slight round in your upper back.","Squeeze your glutes to lift until your body is in a straight line. Don't go past it."],
+    tips:["Pressing your heels into the platform turns your glutes on more.","Hold a light plate once 15 reps get easy."],
+    mistakes:["Hyperextending (arching way back) at the top.","Pad set too high, which blocks the hip bend."]},
+
+  lat_pulldown:{name:"Lat Pulldown", muscles:"Back (lats), biceps", yt:"AKl1em_pH_c",
+    steps:["Set the thigh pad so your legs are locked in. Grab the bar a bit wider than your shoulders.","Lean back slightly and lift your chest.","Pull the bar to your upper chest by driving your elbows down toward your back pockets.","Control the bar back up until your arms are straight."],
+    tips:["Think elbows down, not hands down.","Squeeze your shoulder blades down and together at the bottom."],
+    mistakes:["Leaning way back and yanking with your body.","Pulling the bar behind your neck."]},
+  shoulder_press:{name:"Seated Dumbbell Shoulder Press", muscles:"Shoulders, triceps", yt:"WKEl69bIGus",
+    steps:["Set a bench upright and sit with your back flat against it.","Hold dumbbells at shoulder height, palms facing forward or slightly in.","Press up until your arms are nearly straight, with the dumbbells close together above your head.","Lower slowly back to shoulder height."],
+    tips:["Keep your ribs down. Don't arch off the bench.","Elbows slightly in front of your body, not flared straight out."],
+    mistakes:["Arching your lower back to press.","Going too heavy and losing control on the way down."]},
+  cable_row:{name:"Seated Cable Row", muscles:"Mid back, lats", yt:"cAeBmvpt31A",
+    steps:["Sit with your feet on the platform and a soft bend in your knees. Grab the V-handle.","Sit tall with your chest up, arms straight.","Pull the handle to your belly button and squeeze your shoulder blades together.","Let your arms extend slowly while staying tall."],
+    tips:["Pause for a second with your shoulder blades squeezed together."],
+    mistakes:["Rocking back and forth to move the weight.","Shrugging your shoulders up."]},
+  incline_press:{name:"Incline Dumbbell Press", muscles:"Upper chest, shoulders", yt:"sh5ZsRpEZCw",
+    steps:["Set the bench to about 30°. Sit back with dumbbells on your thighs.","Lie back and bring the dumbbells to the sides of your chest, elbows at about 45° from your body.","Press up and slightly in until your arms are straight.","Lower slowly until you feel a stretch in your chest."],
+    tips:["Keep your feet flat and shoulder blades pinched back into the bench."],
+    mistakes:["Flaring your elbows straight out to the sides.","Bouncing the weights at the bottom."]},
+  lateral_raise:{name:"Dumbbell Lateral Raise", muscles:"Side shoulders", yt:"OK1k6NdNo1I",
+    steps:["Stand holding light dumbbells at your sides with a slight bend in your elbows.","Lean forward a tiny bit.","Raise your arms out to the sides until they're level with your shoulders.","Lower slowly. Don't drop them."],
+    tips:["Lead with your elbows, as if pushing the walls away.","Go light. This muscle is small and 5–10 lb is normal."],
+    mistakes:["Swinging the weights up with your body.","Shrugging your shoulders up to your ears."]},
+  pushdown:{name:"Tricep Rope Pushdown", muscles:"Triceps (back of arms)", yt:"vPeQu_L-1n0",
+    steps:["Attach a rope to a high cable. Grab it with your palms facing each other.","Pin your elbows to your sides and lean forward slightly.","Push down until your arms are straight and spread the rope ends apart at the bottom.","Let it up slowly until your forearms are just above parallel to the floor."],
+    tips:["Only your forearms move. Your elbows stay glued to your sides."],
+    mistakes:["Elbows drifting forward.","Using your body weight to push down."]},
+  curl:{name:"Dumbbell Bicep Curl", muscles:"Biceps", yt:"ykJmrZ5v0Oo",
+    steps:["Stand tall with dumbbells at your sides, palms facing forward.","Keep your elbows by your sides and curl the weights up toward your shoulders.","Squeeze at the top.","Lower slowly all the way down."],
+    tips:["Do this right after the pushdowns as a superset, then rest."],
+    mistakes:["Swinging your body to lift the weight.","Elbows drifting forward."]},
+  dead_bug:{name:"Dead Bug", muscles:"Deep core", yt:"bxn9FBrt4-A",
+    steps:["Lie on your back with arms straight up and knees bent at 90° above your hips.","Press your lower back flat into the floor.","Slowly lower your right arm overhead and your left leg toward the floor at the same time.","Bring them back and switch sides. That's one rep each side."],
+    tips:["Exhale fully as you lower. It locks your core in."],
+    mistakes:["Lower back lifting off the floor. If it does, don't lower as far."]},
+  plank:{name:"Forearm Plank", muscles:"Core, shoulders", yt:"gSDNblPRh1U",
+    steps:["Put your forearms on the floor with elbows directly under your shoulders.","Step your feet back so your body is a straight line from head to heels.","Squeeze your glutes, brace your abs, and push the floor away with your forearms.","Hold and breathe."],
+    tips:["Too hard? Drop to your knees and keep the straight line from head to knees."],
+    mistakes:["Hips sagging down or piking up high.","Holding your breath."]},
+
+  goblet:{name:"Goblet Squat", muscles:"Quads, glutes", yt:"gm4ln6PO4rc",
+    steps:["Hold a dumbbell vertically against your chest with both hands under the top end.","Stand with feet a little wider than your shoulders, toes slightly out.","Sit down between your heels, keeping your chest up and elbows inside your knees.","Push through your whole foot to stand up and squeeze your glutes at the top."],
+    tips:["Go as deep as you can while keeping your back flat and heels down.","Heels lifting? Put small plates under them."],
+    mistakes:["Rounding forward at the bottom.","Knees caving in on the way up."]},
+  leg_press:{name:"Leg Press (Glute Focus)", muscles:"Glutes, quads, hamstrings", yt:"qEFgA58loYg",
+    steps:["Sit with your back and hips flat against the pad.","Place your feet high and a bit wide on the platform, toes slightly out.","Unlock the safeties and lower the sled until your knees come toward your chest, as low as you can without your lower back lifting.","Press through your heels to push it back up. Don't lock your knees."],
+    tips:["Feet higher means more glutes and hamstrings. Feet lower means more quads."],
+    mistakes:["Letting your hips roll up off the pad at the bottom.","Snapping your knees straight at the top."]},
+  reverse_lunge:{name:"Dumbbell Reverse Lunge", muscles:"Glutes, quads", yt:"Q2k3kYbtOcI",
+    steps:["Stand tall holding dumbbells at your sides.","Take a big step back and lower your back knee toward the floor.","Lean your torso slightly forward over your front leg.","Push through your front heel to come back to standing. Do all reps on one leg, then switch."],
+    tips:["A longer step and slight forward lean means more glutes.","Hold onto something with one hand if balance is tricky at first."],
+    mistakes:["Front knee caving inward.","Pushing off with the back foot instead of the front heel."]},
+  step_up:{name:"Dumbbell Step-Up", muscles:"Glutes, quads", yt:"aKj-6hgiViA",
+    steps:["Stand facing a bench or box that puts your knee at about hip height or a little lower.","Place one whole foot on the box with dumbbells at your sides.","Lean forward slightly and drive through the heel on the box to stand up on top.","Lower slowly on the same leg. Do all reps, then switch."],
+    tips:["Let the back foot barely tap the floor. Don't push off with it."],
+    mistakes:["Bouncing off the bottom foot.","Box so high that your hips shift sideways."]},
+  leg_ext:{name:"Leg Extension", muscles:"Quads (front of thighs)", yt:"Cy9TJ_jhEBs",
+    steps:["Adjust the seat so your knees line up with the machine's pivot point and the pad sits on your lower shins.","Hold the handles and sit tall.","Straighten your legs fully and squeeze your quads for a second.","Lower slowly."],
+    tips:["Control the way down. That's where a lot of the toning comes from."],
+    mistakes:["Kicking the weight up with momentum.","Lifting your butt off the seat."]},
+  stairmaster:{name:"Stairmaster", muscles:"Glutes, legs, cardio", yt:"xSB39wbMz4w",
+    steps:["Step on and start at level 4–6.","Stand tall with a slight forward lean from the hips.","Press through your whole foot on each step and squeeze the glute of the working leg.","Keep a steady pace you can hold for the whole time."],
+    tips:["Touch the rails only for balance.","Bump the level up once this feels easy."],
+    mistakes:["Hanging on the rails with all your weight.","Taking tiny, rushed steps on your toes."]},
+
+  sumo_dl:{name:"Dumbbell Sumo Deadlift", muscles:"Glutes, inner thighs, hamstrings", yt:"De9OUZz5W_I",
+    steps:["Stand with feet wide, toes turned out about 30°. Hold one heavy dumbbell by the end, hanging between your legs.","Push your hips back and bend your knees to lower the dumbbell toward the floor. Keep your chest up and back flat.","Push the floor away and squeeze your glutes to stand up tall.","Lower under control."],
+    tips:["Push your knees out in line with your toes.","Arms are just hooks. Your legs and hips do the lifting."],
+    mistakes:["Rounding your back at the bottom.","Knees collapsing inward."],
+    swap:"Kettlebell sumo deadlift."},
+  assisted_pullup:{name:"Assisted Pull-Up", muscles:"Back, biceps", yt:"gnElpp3Fm50",
+    steps:["Set the assist weight. More weight means more help.","Kneel or stand on the platform and grab the handles a bit wider than your shoulders.","Pull your chest up toward the bar by driving your elbows down.","Lower slowly until your arms are straight."],
+    tips:["As you get stronger, lower the assist weight. Watching it go down is very satisfying!"],
+    mistakes:["Doing half reps.","Swinging or kicking."],
+    swap:"Lat pulldown with a close or neutral grip."},
+  pull_through:{name:"Cable Pull-Through", muscles:"Glutes, hamstrings", yt:"yXopOhzEoeo",
+    steps:["Attach a rope to a low cable. Face away from the machine and grab the rope between your legs.","Walk out a few steps, feet a bit wider than your hips.","Push your hips back and let the rope pull your hands back between your legs.","Drive your hips forward and squeeze your glutes hard to stand up tall."],
+    tips:["Same hinge as the RDL. Push your hips back, don't squat down."],
+    mistakes:["Pulling with your arms.","Leaning back at the top."]},
+  incline_pushup:{name:"Incline Push-Up", muscles:"Chest, shoulders, triceps, core", yt:"-9S9gdRwwak",
+    steps:["Put your hands on a bench or Smith machine bar, a little wider than your shoulders.","Walk your feet back until your body is a straight line.","Lower your chest to the bench with elbows at about 45° from your body.","Push back up, keeping your body rigid."],
+    tips:["The higher your hands, the easier it is. Go lower as you get stronger."],
+    mistakes:["Hips sagging.","Elbows flared straight out."]},
+  walking_lunge:{name:"Dumbbell Walking Lunge", muscles:"Glutes, quads", yt:"I34ysEkPK7w",
+    steps:["Hold dumbbells at your sides and stand tall.","Take a long step forward and lower until your back knee nearly touches the floor.","Push through your front heel and bring your back foot forward into the next lunge.","Keep walking, alternating legs."],
+    tips:["Longer steps hit your glutes more.","No room to walk? Do alternating lunges in place."],
+    mistakes:["Short, choppy steps.","Front knee caving in."]},
+  kb_swing:{name:"Kettlebell Swing", muscles:"Glutes, hamstrings, cardio", yt:"yeB_J0rqc5Q",
+    steps:["Stand with feet a little wider than your hips, kettlebell on the floor in front of you.","Hinge your hips back, grab the bell, and hike it back between your legs.","Snap your hips forward and squeeze your glutes to float the bell to chest height.","Let it swing back down between your legs and hinge back into the next rep."],
+    tips:["This is a hip snap, not an arm raise. Your arms just guide the bell.","Start light (8–12 kg) until the movement clicks."],
+    mistakes:["Squatting instead of hinging.","Lifting with your arms or shoulders."]},
+
+  figure4:{name:"Lying Figure-4 Stretch", muscles:"Glutes, hips", yt:"cgK1yy_xjeM",
+    steps:["Lie on your back, knees bent.","Cross your right ankle over your left knee.","Reach through and pull your left thigh toward your chest until you feel a stretch in your right glute.","Hold 45–60 seconds, then switch sides."],
+    tips:["Breathe slowly and relax into it."], mistakes:["Pulling so hard it hurts. A stretch should feel good."]},
+  hamstring_stretch:{name:"Standing Hamstring Stretch", muscles:"Hamstrings", yt:"LVY692zJK0A",
+    steps:["Place one heel on a low bench with your leg straight and toes up.","Keep your back flat and hinge forward from your hips until you feel a stretch.","Hold 30–45 seconds per side."],
+    tips:["Lead with your chest, not your head."], mistakes:["Rounding your back to reach your toes."]},
+  hip_flexor:{name:"Kneeling Hip Flexor Stretch", muscles:"Front of hips", yt:"UU7Nqd_Dric",
+    steps:["Kneel on one knee (use a pad) with the other foot flat in front.","Tuck your tailbone under and squeeze the glute of the down leg.","Shift your hips forward slightly until you feel a stretch in the front of that hip.","Hold 30–45 seconds per side."],
+    tips:["Raise the arm on the kneeling side overhead for a deeper stretch."], mistakes:["Arching your lower back instead of tucking."]},
+  childs_pose:{name:"Child's Pose", muscles:"Back, hips, shoulders", yt:"jaCOZJPSy2g",
+    steps:["Kneel with big toes together and knees wide.","Sit your hips back toward your heels.","Walk your hands forward and rest your forehead on the floor.","Breathe deeply for 1 minute."],
+    tips:["Walk your hands to one side, then the other, to stretch your sides."], mistakes:[]},
+  doorway:{name:"Doorway Chest Stretch", muscles:"Chest, front shoulders", yt:"B9uY01NoqBg",
+    steps:["Stand in a doorway or next to a rack upright.","Place your forearm on the frame with your elbow bent at 90° and level with your shoulder.","Step forward gently until you feel a stretch across your chest.","Hold 30–45 seconds per side."],
+    tips:[], mistakes:["Pushing into pain at the front of your shoulder."]},
+  thread_needle:{name:"Thread the Needle", muscles:"Upper back, shoulders", yt:"z9rHkuGNjWQ",
+    steps:["Start on hands and knees.","Slide your right arm under your body to the left, palm up, lowering your right shoulder and ear to the floor.","Hold for a few breaths, then switch sides."],
+    tips:["Keep your hips over your knees as you twist."], mistakes:[]},
+  quad_stretch:{name:"Standing Quad Stretch", muscles:"Quads", yt:"2_pr9-LDUSQ",
+    steps:["Stand tall and hold onto something for balance.","Bend one knee and grab your ankle behind you.","Keep your knees together and gently pull your heel toward your butt.","Hold 30–45 seconds per side."],
+    tips:["Squeeze your glute on the stretching side for more stretch."], mistakes:["Arching your back or letting the knee drift forward."]}
+};
+
+/* ---------- Program ---------- */
+const DAYS = [
+  { id:"day1", short:"Glutes", title:"Glutes & Hamstrings", blurb:"Your main glute-building day. Hip thrusts first, while you're fresh.",
+    sections:[
+      {kind:"warm", name:"Warm-up", items:[
+        {ex:"incline_walk", sets:"1", reps:"4 min", rest:"–", min:4, note:"10% incline, easy pace."},
+        {ex:"glute_bridge", sets:"2", reps:"15", rest:"15s", min:2},
+        {ex:"lateral_walk", sets:"2", reps:"10 each way", rest:"15s", min:2}]},
+      {kind:"main", name:"Main workout", items:[
+        {ex:"hip_thrust", sets:"4", reps:"8–12", rest:"90s", min:12, note:"Do 2 light warm-up sets first (empty bar, then about half your working weight)."},
+        {ex:"rdl", sets:"3", reps:"8–12", rest:"90s", min:9},
+        {ex:"kickback", sets:"3", reps:"12–15 / leg", rest:"45s", min:8},
+        {ex:"leg_curl", sets:"3", reps:"10–15", rest:"60s", min:6}]},
+      {kind:"fin", name:"Glute finisher", items:[
+        {ex:"abduction", sets:"3", reps:"15–20", rest:"45s", min:5, note:"Last set: when you can't do any more full reps, keep going with small pulses."},
+        {ex:"back_ext", sets:"3", reps:"12–15", rest:"45s", min:5}]},
+      {kind:"cool", name:"Cool-down", items:[
+        {ex:"figure4", sets:"1", reps:"45s / side", rest:"–", min:2},
+        {ex:"hamstring_stretch", sets:"1", reps:"30s / side", rest:"–", min:2},
+        {ex:"hip_flexor", sets:"1", reps:"30s / side", rest:"–", min:2},
+        {ex:"childs_pose", sets:"1", reps:"1 min", rest:"–", min:1}]}
+    ]},
+  { id:"day2", short:"Upper", title:"Upper Body & Core", blurb:"Toned arms, shoulders and back for better posture and a balanced shape. Core work to finish.",
+    sections:[
+      {kind:"warm", name:"Warm-up", items:[
+        {ex:"incline_walk", sets:"1", reps:"4 min", rest:"–", min:4, note:"Or the rowing machine at an easy pace."},
+        {ex:"cat_cow", sets:"1", reps:"10 slow reps", rest:"–", min:2},
+        {ex:"pull_apart", sets:"2", reps:"15", rest:"15s", min:2}]},
+      {kind:"main", name:"Main workout", items:[
+        {ex:"lat_pulldown", sets:"3", reps:"8–12", rest:"90s", min:7},
+        {ex:"shoulder_press", sets:"3", reps:"8–12", rest:"90s", min:7},
+        {ex:"cable_row", sets:"3", reps:"10–12", rest:"60s", min:6},
+        {ex:"incline_press", sets:"3", reps:"8–12", rest:"90s", min:8},
+        {ex:"lateral_raise", sets:"3", reps:"12–15", rest:"45s", min:5},
+        {ex:"pushdown", sets:"3", reps:"12–15", rest:"0s → curls", min:3, note:"Superset: go straight from pushdowns into curls, then rest 60s."},
+        {ex:"curl", sets:"3", reps:"10–12", rest:"60s", min:3}]},
+      {kind:"fin", name:"Core", items:[
+        {ex:"dead_bug", sets:"3", reps:"8 / side", rest:"30s", min:3},
+        {ex:"plank", sets:"3", reps:"20–40s", rest:"30s", min:3}]},
+      {kind:"cool", name:"Cool-down", items:[
+        {ex:"doorway", sets:"1", reps:"30s / side", rest:"–", min:2},
+        {ex:"thread_needle", sets:"1", reps:"30s / side", rest:"–", min:2},
+        {ex:"cat_cow", sets:"1", reps:"8 slow reps", rest:"–", min:1},
+        {ex:"childs_pose", sets:"1", reps:"1–2 min", rest:"–", min:2}]}
+    ]},
+  { id:"day3", short:"Legs", title:"Quads & Glutes", blurb:"Squats, lunges and step-ups for strong, shapely legs. Finish with the Stairmaster.",
+    sections:[
+      {kind:"warm", name:"Warm-up", items:[
+        {ex:"incline_walk", sets:"1", reps:"3 min", rest:"–", min:3},
+        {ex:"bw_squat", sets:"2", reps:"12", rest:"15s", min:2},
+        {ex:"clamshell", sets:"1", reps:"15 / side", rest:"–", min:3}]},
+      {kind:"main", name:"Main workout", items:[
+        {ex:"goblet", sets:"4", reps:"8–12", rest:"90s", min:9},
+        {ex:"leg_press", sets:"3", reps:"10–12", rest:"90s", min:8},
+        {ex:"reverse_lunge", sets:"3", reps:"8–10 / leg", rest:"60s", min:8},
+        {ex:"step_up", sets:"3", reps:"8–10 / leg", rest:"60s", min:8},
+        {ex:"leg_ext", sets:"3", reps:"12–15", rest:"45s", min:5}]},
+      {kind:"fin", name:"Cardio finisher", items:[
+        {ex:"stairmaster", sets:"1", reps:"7 min", rest:"–", min:7, note:"Steady pace. Try 1 minute at a faster level every other minute once it feels easy."}]},
+      {kind:"cool", name:"Cool-down", items:[
+        {ex:"quad_stretch", sets:"1", reps:"30s / side", rest:"–", min:2},
+        {ex:"hip_flexor", sets:"1", reps:"30s / side", rest:"–", min:2},
+        {ex:"figure4", sets:"1", reps:"45s / side", rest:"–", min:2},
+        {ex:"childs_pose", sets:"1", reps:"1 min", rest:"–", min:1}]}
+    ]},
+  { id:"day4", short:"Full body", title:"Full Body & Glute Pump", blurb:"A bit of everything. Big hinge moves, upper body pulls and pushes, and a sweaty finish.",
+    sections:[
+      {kind:"warm", name:"Warm-up", items:[
+        {ex:"incline_walk", sets:"1", reps:"3 min", rest:"–", min:3},
+        {ex:"glute_bridge", sets:"2", reps:"15", rest:"15s", min:2},
+        {ex:"lateral_walk", sets:"2", reps:"10 each way", rest:"15s", min:2},
+        {ex:"pull_apart", sets:"1", reps:"15", rest:"–", min:1}]},
+      {kind:"main", name:"Main workout", items:[
+        {ex:"sumo_dl", sets:"3", reps:"8–12", rest:"90s", min:8},
+        {ex:"assisted_pullup", sets:"3", reps:"6–10", rest:"90s", min:7},
+        {ex:"pull_through", sets:"3", reps:"12–15", rest:"60s", min:6},
+        {ex:"incline_pushup", sets:"3", reps:"8–12", rest:"60s", min:5},
+        {ex:"walking_lunge", sets:"3", reps:"10 / leg", rest:"60s", min:7}]},
+      {kind:"fin", name:"Sweat finisher", items:[
+        {ex:"kb_swing", sets:"5", reps:"15", rest:"rest of the minute", min:5, note:"Every minute on the minute: 15 swings, rest until the next minute starts. 5 rounds."},
+        {ex:"incline_walk", sets:"1", reps:"7 min", rest:"–", min:7, note:"12% incline, 3 mph. No holding on!"}]},
+      {kind:"cool", name:"Cool-down", items:[
+        {ex:"hamstring_stretch", sets:"1", reps:"30s / side", rest:"–", min:2},
+        {ex:"doorway", sets:"1", reps:"30s / side", rest:"–", min:2},
+        {ex:"figure4", sets:"1", reps:"45s / side", rest:"–", min:2},
+        {ex:"childs_pose", sets:"1", reps:"1 min", rest:"–", min:1}]}
+    ]}
+];
+
+/* ---------- Storage (safe) ---------- */
+const store = {
+  get(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } },
+  set(k,v){ try{ localStorage.setItem(k,v); }catch(e){} },
+  del(k){ try{ localStorage.removeItem(k); }catch(e){} }
+};
+
+/* ---------- Render ---------- */
+const tablist = document.getElementById("tablist");
+const dayEl = document.getElementById("day");
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+DAYS.forEach((d,i) => {
+  const b = document.createElement("button");
+  b.className = "tab"; b.type = "button"; b.role = "tab"; b.id = "tab-" + d.id;
+  b.innerHTML = `<small>Day ${i+1}</small><span>${esc(d.short)}</span>`;
+  b.addEventListener("click", () => { location.hash = d.id; });
+  tablist.appendChild(b);
+});
+
+function restSeconds(rest){
+  const m = /^(\d+)s$/.exec(rest); return m ? +m[1] : 0;
+}
+
+function card(day, si, ii, it){
+  const e = EX[it.ex];
+  const key = `${day.id}-${si}-${ii}`;
+  const nSets = parseInt(it.sets,10) || 1;
+  const rs = restSeconds(it.rest);
+  let setBtns = "";
+  for(let s=1; s<=nSets; s++){
+    const on = store.get(`set:${key}:${s}`) === "1";
+    setBtns += `<button type="button" class="setbtn num" data-set="${key}:${s}" aria-pressed="${on}" aria-label="Set ${s} done">${s}</button>`;
+  }
+  const showWeight = ["main","fin"].includes(day.sections[si].kind) && !["stairmaster","incline_walk","plank","dead_bug","incline_pushup"].includes(it.ex);
+  const w = store.get(`w:${day.id}:${it.ex}`) || "";
+  const list = arr => arr.map(x => `<li>${esc(x)}</li>`).join("");
+  return `
+  <article class="card" id="c-${key}">
+    <button type="button" class="video" data-yt="${e.yt}" aria-label="Play demo video: ${esc(e.name)}">
+      <img loading="lazy" src="https://i.ytimg.com/vi/${e.yt}/hqdefault.jpg" alt="">
+      <span class="play"><b></b></span>
+      <span class="tag">Watch demo</span>
+    </button>
+    <div class="cbody">
+      <div class="ctop">
+        <div><h4>${esc(e.name)}</h4><div class="muscles">${esc(e.muscles)}</div></div>
+        <span class="minpill num">${it.min} min</span>
+      </div>
+      <div class="rx">
+        <div><small>Sets</small><b class="num">${esc(it.sets)}</b></div>
+        <div><small>Reps</small><b class="num">${esc(it.reps)}</b></div>
+        <div><small>Rest</small><b class="num">${esc(it.rest)}</b></div>
+      </div>
+      ${it.note ? `<p class="note">${esc(it.note)}</p>` : ""}
+      <div class="tracker">
+        ${setBtns}
+        ${rs ? `<button type="button" class="restbtn" data-rest="${rs}" data-name="${esc(e.name)}">Rest ${rs}s</button>` : ""}
+      </div>
+      ${showWeight ? `<label class="weight" for="w-${key}">Weight used <input id="w-${key}" data-w="w:${day.id}:${it.ex}" inputmode="decimal" placeholder="e.g. 65 lb" value="${esc(w)}"></label>` : ""}
+      <details class="how">
+        <summary>How to do it</summary>
+        <div class="howbody">
+          <h5>Steps</h5><ol>${list(e.steps)}</ol>
+          ${e.tips.length ? `<h5>Tips</h5><ul>${list(e.tips)}</ul>` : ""}
+          ${e.mistakes.length ? `<h5>Avoid</h5><ul>${list(e.mistakes)}</ul>` : ""}
+          ${e.swap ? `<div class="swap"><b>Machine taken?</b> Swap for: ${esc(e.swap)}</div>` : ""}
+          <p class="ytlink">Video not loading? <a href="https://www.youtube.com/watch?v=${e.yt}" target="_blank" rel="noopener">Open it on YouTube</a></p>
+        </div>
+      </details>
+    </div>
+  </article>`;
+}
+
+function render(id){
+  const idx = Math.max(0, DAYS.findIndex(d => d.id === id));
+  const day = DAYS[idx];
+  [...tablist.children].forEach((b,i) => b.setAttribute("aria-selected", i===idx));
+  const totals = {warm:0, main:0, fin:0, cool:0};
+  day.sections.forEach(s => s.items.forEach(it => totals[s.kind] += it.min));
+  const total = Object.values(totals).reduce((a,b)=>a+b,0);
+  const labels = {warm:"Warm-up", main:"Main", fin: day.sections.find(s=>s.kind==="fin").name, cool:"Cool-down"};
+  dayEl.innerHTML = `
+    <div class="dayhead">
+      <div class="eyebrow">Day ${idx+1} · <span class="num">${total}</span> minutes</div>
+      <h2>${esc(day.title)}</h2>
+      <p>${esc(day.blurb)}</p>
+      <div class="timebar" aria-hidden="true">${Object.entries(totals).map(([k,v]) => `<span class="c-${k}" style="flex:${v}"></span>`).join("")}</div>
+      <div class="legend num">${Object.entries(totals).map(([k,v]) => `<span><i class="c-${k}"></i>${esc(labels[k])} ${v}m</span>`).join("")}</div>
+    </div>
+    ${day.sections.map((s,si) => `
+      <section class="section">
+        <div class="sechead"><h3>${esc(s.name)}</h3><span class="mins num">${s.items.reduce((a,b)=>a+b.min,0)} min</span></div>
+        <div class="cards">${s.items.map((it,ii) => card(day, si, ii, it)).join("")}</div>
+      </section>`).join("")}
+    <div class="dayfoot">
+      <span class="progress num" id="prog"></span>
+      <button type="button" class="ghost" id="reset">Clear checkmarks</button>
+    </div>`;
+  updateProgress(day);
+  document.getElementById("reset").addEventListener("click", () => {
+    dayEl.querySelectorAll(".setbtn").forEach(b => { b.setAttribute("aria-pressed","false"); store.del("set:" + b.dataset.set); });
+    dayEl.querySelectorAll(".card").forEach(c => c.classList.remove("done"));
+    updateProgress(day);
+  });
+  dayEl.querySelectorAll(".card").forEach(markCard);
+}
+
+function markCard(c){
+  const btns = c.querySelectorAll(".setbtn");
+  c.classList.toggle("done", btns.length && [...btns].every(b => b.getAttribute("aria-pressed")==="true"));
+}
+function updateProgress(){
+  const all = dayEl.querySelectorAll(".setbtn"); const on = dayEl.querySelectorAll('.setbtn[aria-pressed="true"]');
+  const p = document.getElementById("prog"); if(p) p.textContent = `${on.length} of ${all.length} sets done`;
+}
+
+/* ---------- Interactions ---------- */
+dayEl.addEventListener("click", ev => {
+  const v = ev.target.closest(".video");
+  if(v && !v.querySelector("iframe")){
+    const id = v.dataset.yt;
+    v.innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0&playsinline=1&modestbranding=1" title="Exercise demo" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>`;
+    return;
+  }
+  const s = ev.target.closest(".setbtn");
+  if(s){
+    const on = s.getAttribute("aria-pressed") !== "true";
+    s.setAttribute("aria-pressed", on);
+    on ? store.set("set:" + s.dataset.set, "1") : store.del("set:" + s.dataset.set);
+    markCard(s.closest(".card")); updateProgress();
+    return;
+  }
+  const r = ev.target.closest(".restbtn");
+  if(r){ startTimer(+r.dataset.rest, r.dataset.name); }
+});
+dayEl.addEventListener("input", ev => {
+  const i = ev.target.closest("input[data-w]"); if(i) store.set(i.dataset.w, i.value);
+});
+
+/* ---------- Rest timer ---------- */
+const T = document.getElementById("timer"), tval = document.getElementById("tval"), tlbl = document.getElementById("tlbl");
+let endAt = 0, tick = null, actx = null;
+const fmt = s => `${Math.floor(s/60)}:${String(s%60).padStart(2,"0")}`;
+function beep(){
+  try{
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    [0, .25, .5].forEach(off => {
+      const o = actx.createOscillator(), g = actx.createGain();
+      o.frequency.value = 880; o.connect(g); g.connect(actx.destination);
+      g.gain.setValueAtTime(.0001, actx.currentTime + off);
+      g.gain.exponentialRampToValueAtTime(.3, actx.currentTime + off + .02);
+      g.gain.exponentialRampToValueAtTime(.0001, actx.currentTime + off + .18);
+      o.start(actx.currentTime + off); o.stop(actx.currentTime + off + .2);
+    });
+  }catch(e){}
+  try{ navigator.vibrate && navigator.vibrate([200,100,200]); }catch(e){}
+}
+function startTimer(sec, name){
+  try{ actx = actx || new (window.AudioContext || window.webkitAudioContext)(); actx.resume && actx.resume(); }catch(e){}
+  endAt = Date.now() + sec*1000; tlbl.textContent = "Rest · " + name; T.hidden = false; T.classList.remove("ding");
+  clearInterval(tick); tick = setInterval(update, 250); update();
+}
+function update(){
+  const left = Math.max(0, Math.ceil((endAt - Date.now())/1000));
+  tval.textContent = fmt(left);
+  if(left === 0){ clearInterval(tick); tlbl.textContent = "Time for your next set!"; T.classList.add("ding"); beep(); }
+}
+document.getElementById("tplus").addEventListener("click", () => {
+  if(Date.now() > endAt){ endAt = Date.now(); T.classList.remove("ding"); clearInterval(tick); tick = setInterval(update,250); }
+  endAt += 15000; update();
+});
+document.getElementById("tstop").addEventListener("click", () => { clearInterval(tick); T.hidden = true; });
+
+/* ---------- Routing ---------- */
+function route(){
+  let id = (location.hash || "").slice(1) || store.get("lastDay") || "day1";
+  if(!DAYS.some(d => d.id === id)) id = "day1";
+  render(id); store.set("lastDay", id);
+}
+window.addEventListener("hashchange", () => { route(); window.scrollTo({top: document.querySelector("nav.tabs").offsetTop - 2}); });
+route();
+</script>
+</body>
+</html>
